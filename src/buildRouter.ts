@@ -24,7 +24,11 @@ const plugin = (admin: AdminBro): FastifyPluginCallback<Options> => (fastify, op
     },
   });
 
-  fastify.register(fastifyMultipart, opts.fastifyMultipartOpts);
+  fastify.register(fastifyMultipart, {
+    ...opts.fastifyMultipartOpts,
+    // TODO onFile for handling files
+    attachFieldsToBody: true,
+  });
 
   admin.initialize().then(() => {
     fastify.log.debug('AdminBro: bundle ready');
@@ -60,9 +64,19 @@ const plugin = (admin: AdminBro): FastifyPluginCallback<Options> => (fastify, op
       );
       const { params, query } = request;
       const method = request.method.toLowerCase();
-      console.log(request.body);
+
+      const requestBody: any = request.body;
+
+      let body = {};
+      if (requestBody) {
+        body = Object.fromEntries(
+          Object.keys(requestBody).map((key) => [key, requestBody[key].value]),
+        );
+      }
+
       const payload = {
-        ...request.body as any,
+        ...body,
+        // TODO Handle files
       };
       const adminResponse = await controller[route.action](
         {
