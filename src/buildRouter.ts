@@ -7,11 +7,13 @@ import { WrongArgumentError } from './errors';
 
 const INVALID_ADMIN_BRO_INSTANCE = 'You have to pass an instance of AdminBro to the buildRouter() function';
 
-type Options = {
-  fastifyMultipartOpts: Record<string, FastifyMultipartOptions>;
+export type RouterOptions = {
+  multipartOpts: Record<string, FastifyMultipartOptions>;
 } | FastifyPluginOptions;
 
-const plugin = (admin: AdminBro): FastifyPluginCallback<Options> => (fastify, opts, done) => {
+export const plugin = (
+  admin: AdminBro,
+): FastifyPluginCallback<RouterOptions> => async (fastify, opts) => {
   if (admin?.constructor?.name !== 'AdminBro') {
     throw new WrongArgumentError(INVALID_ADMIN_BRO_INSTANCE);
   }
@@ -25,14 +27,13 @@ const plugin = (admin: AdminBro): FastifyPluginCallback<Options> => (fastify, op
   });
 
   fastify.register(fastifyMultipart, {
-    ...opts.fastifyMultipartOpts,
+    ...opts.multipartOpts,
     // TODO onFile for handling files
     attachFieldsToBody: true,
   });
 
-  admin.initialize().then(() => {
-    fastify.log.debug('AdminBro: bundle ready');
-  });
+  await admin.initialize();
+  fastify.log.debug('AdminBro: bundle ready');
 
   const { routes, assets } = Router;
 
@@ -110,15 +111,11 @@ const plugin = (admin: AdminBro): FastifyPluginCallback<Options> => (fastify, op
       handler,
     });
   });
-
-  done();
 };
 
-// eslint-disable-next-line import/prefer-default-export
-export const buildRouter = (admin: AdminBro): FastifyPluginCallback<Options> => (fastify, opts, done) => {
+export const buildRouter = (admin: AdminBro): FastifyPluginCallback<RouterOptions> => async (fastify, opts) => {
   fastify.register(plugin(admin), {
     ...opts,
     prefix: admin.options.rootPath,
   });
-  done();
 };
