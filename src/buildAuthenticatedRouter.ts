@@ -35,8 +35,7 @@ const plugin = (admin: AdminBro): FastifyPluginCallback<Options> => async (fasti
 
   const { rootPath, loginPath, logoutPath } = admin.options;
 
-  fastify.addHook('onRequest', (request, reply, done) => {
-    console.log('session', request.session);
+  fastify.addHook('preHandler', (request, reply, done) => {
     if (Router.assets.find((asset) => request.url.match(asset.path))) {
       done();
     } else if (
@@ -53,6 +52,7 @@ const plugin = (admin: AdminBro): FastifyPluginCallback<Options> => async (fasti
         ? rootPath
         : redirectTo;
       reply.redirect(admin.options.loginPath);
+      done();
     }
   });
 

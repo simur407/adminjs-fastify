@@ -26,6 +26,7 @@ const start = async () => {
   app.register(plugin, {
     sessionOpts: {
       secret: 'superSecretSecretWithTotalOf32charsOrEvenMore',
+      saveUninitialized: false,
       cookie: {
         secure: false, // for http test, https does not require this
         httpOnly: false,

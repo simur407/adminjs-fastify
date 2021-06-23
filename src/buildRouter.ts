@@ -61,7 +61,7 @@ export const plugin = (
     const handler: RouteHandlerMethod = async (request, reply) => {
       const controller = new route.Controller(
         { admin },
-        // request.session && request.session.adminUser,
+        request.session && request.session.adminUser,
       );
       const { params, query } = request;
       const method = request.method.toLowerCase();
