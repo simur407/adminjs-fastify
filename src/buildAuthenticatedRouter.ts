@@ -51,6 +51,7 @@ const plugin = (admin: AdminBro): FastifyPluginCallback<Options> => async (fasti
       request.session.redirectTo = redirectTo.includes(`${rootPath}/api`)
         ? rootPath
         : redirectTo;
+      reply.type('text/html');
       reply.redirect(admin.options.loginPath);
       done();
     }
@@ -76,7 +77,6 @@ const plugin = (admin: AdminBro): FastifyPluginCallback<Options> => async (fasti
     const adminUser = await Promise.resolve(opts.authenticate(email, password));
     if (adminUser) {
       request.session.adminUser = adminUser;
-      console.log(request.session);
       if (request.session.redirectTo) {
         reply.redirect(302, request.session.redirectTo);
       } else {
@@ -87,6 +87,7 @@ const plugin = (admin: AdminBro): FastifyPluginCallback<Options> => async (fasti
         action: admin.options.loginPath,
         errorMessage: 'invalidCredentials',
       });
+      reply.type('text/html');
       reply.send(login);
     }
   });
@@ -94,7 +95,8 @@ const plugin = (admin: AdminBro): FastifyPluginCallback<Options> => async (fasti
   const logoutPathNormalized = getNormalizedPath(rootPath, logoutPath);
 
   fastify.get(logoutPathNormalized, async (request, reply) => {
-    const asyncDestroySession = promisify(request.destroySession);
+    // due to destroySession using this in its implementation we have to bind request as this for Promise to work
+    const asyncDestroySession = promisify(request.destroySession.bind(request));
     await asyncDestroySession();
     reply.redirect(loginPath);
   });

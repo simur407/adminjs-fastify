@@ -32,7 +32,12 @@ const start = async () => {
         httpOnly: false,
       },
     },
-    authenticate: (email, password) => ({ email }),
+    authenticate: (email, password) => {
+      if (email === 'test@example.com') {
+        return { email };
+      }
+      return undefined;
+    },
   });
 
   await app.listen(process.env.PORT || 8080);
